@@ -6,7 +6,6 @@
 # include <string.h>
 # include <unistd.h>
 # include "list_utils.h"
-
-# define MAX_NUM 1000
+# include "config_file.h"
 
 #endif

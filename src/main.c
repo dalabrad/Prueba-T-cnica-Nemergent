@@ -19,7 +19,12 @@ int	main(int argc, char *argv[])
         fprintf(stderr, "Error: Wrong arguments. Use -h or --help for more info\n");
         return (EXIT_FAILURE);
     }
-	printf("Arguments ok, here the config_file parsing function should be called\n");
-	printf("config file name: %s\n", argv[2]);
+
+	config_t config;
+
+	if (!parse_config(argv[2], &config))
+		return (EXIT_FAILURE);
+	printf("numbers_per_thread = %d\n", config.numbers_per_thread);
+	printf("thread_num = %d\n", config.thread_num);
 	return(EXIT_SUCCESS);
 }
