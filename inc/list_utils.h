@@ -4,11 +4,13 @@
 # include <stdio.h>
 # include <stdlib.h>
 
-typedef struct node_s
+typedef struct node_s node_t;
+
+struct node_s 
 {
 	int value;
-	struct node *next;
-}	node_t;
+	node_t *next;
+};
 
 typedef struct list_s
 {
@@ -17,7 +19,7 @@ typedef struct list_s
 
 list_t	*create_list();
 void	free_list(list_t *list);
-void	add_to_list(list_t *list, int value);
+int		add_to_list(list_t *list, int value);
 void	print_list(list_t *list);
 
 #endif
