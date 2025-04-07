@@ -21,7 +21,7 @@ RESET = \033[0m
 
 $(NAME) : $(CONFIG_FILE) $(LIST_UTILS) $(MAIN)
 	@echo "$(YELLOW)Compiling ./nemergent executable...$(RESET)"
-	$(CC) $(CFLAGS) -o $(NAME) $(MAIN) $(LIST_UTILS) $(CONFIG_FILE)
+	$(CC) $(CFLAGS) -pthread -o $(NAME) $(MAIN) $(LIST_UTILS) $(CONFIG_FILE)
 	@echo "$(GREEN)./nemergent executable created successfully.$(RESET)"
 
 $(CONFIG_FILE) : $(CF_OBJS)
