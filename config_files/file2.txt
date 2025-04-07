@@ -1,0 +1,2 @@
+thread_num = 6
+numbers_per_thread = 20

@@ -19,11 +19,14 @@ bool	parse_config(const char *filename, config_t *config)
 
 	if (!file)
 	{
-		fprintf(stderr, "Error: file %s does not exist or have read permission", filename);
+		fprintf(stderr, "Error: file %s does not exist or have read permission\n", filename);
 		return (false);
 	}
 
 	char line[256];
+	
+	config->numbers_per_thread = 0;
+	config->thread_num = 0;
 
 	while (fgets(line, sizeof(line), file))
 	{
