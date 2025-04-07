@@ -1,9 +1,37 @@
 #include "main.h"
 
+/*
+ * This function sets a boolean variable pointed by dest to value.
+*/
+void	set_bool(mutex_t *mutex, bool *dest, bool value)
+{
+	pthread_mutex_lock(mutex);
+	*dest = value;
+	pthread_mutex_unlock(mutex);
+}
+
+/*
+ * This function returns the value of boolean variable pointed by bool_ptr.
+*/
+bool	get_bool(mutex_t *mutex, bool *bool_ptr)
+{
+	bool	value;
+
+	pthread_mutex_lock(mutex);
+	value = *bool_ptr;
+	pthread_mutex_unlock(mutex);
+	return (value);
+}
+
 void	*thread_routine(void *arg)
 {
 	data_t *data = (data_t *)arg;
 	int		n = data->config.numbers_per_thread;
+
+	while (!get_bool(&(data->mutex_start), &(data->start)))
+		;
+	if (data->created_threads < data->config.thread_num)
+		return (NULL);
 
 	for (int i = 0; i < n; i++)
 	{
@@ -70,32 +98,41 @@ int	main(int argc, char *argv[])
 
 	srand(time(NULL) * getpid()); //Generate rand seed.
 
-	// Init mutexes and check for correct initialization.
-	if (pthread_mutex_init(&(data.mutex_even), NULL))
-	{
-		fprintf(stderr, "Error: mutex: unable to initialize mutex\n");
-		return (EXIT_FAILURE);
-	}
-	if (pthread_mutex_init(&(data.mutex_odd), NULL))
-	{
-		fprintf(stderr, "Error: mutex: unable to initialize mutex\n");
-		pthread_mutex_destroy(&(data.mutex_odd));
-		return (EXIT_FAILURE);
-	}
-
 	// Init list and check the data allocation
 	data.even_list = create_list();
 	if (!data.even_list)
 	{
 		fprintf(stderr, "Error: malloc: data allocation failed\n");
-		pthread_mutex_destroy(&(data.mutex_even));
-		pthread_mutex_destroy(&(data.mutex_odd));
 		return (EXIT_FAILURE);
 	}
 	data.odd_list = create_list();
 	if (!data.odd_list)
 	{
 		fprintf(stderr, "Error: malloc: data allocation failed\n");
+		free_list(data.even_list);
+		return (EXIT_FAILURE);
+	}
+
+	// Init mutexes and check for correct initialization.
+	if (pthread_mutex_init(&(data.mutex_even), NULL))
+	{
+		fprintf(stderr, "Error: mutex: unable to initialize mutex\n");
+		free_list(data.even_list);
+		free_list(data.even_list);
+		return (EXIT_FAILURE);
+	}
+	if (pthread_mutex_init(&(data.mutex_odd), NULL))
+	{
+		fprintf(stderr, "Error: mutex: unable to initialize mutex\n");
+		free_list(data.even_list);
+		free_list(data.even_list);
+		pthread_mutex_destroy(&(data.mutex_even));
+		return (EXIT_FAILURE);
+	}
+	if (pthread_mutex_init(&(data.mutex_start), NULL))
+	{
+		fprintf(stderr, "Error: mutex: unable to initialize mutex\n");
+		free_list(data.even_list);
 		free_list(data.even_list);
 		pthread_mutex_destroy(&(data.mutex_even));
 		pthread_mutex_destroy(&(data.mutex_odd));
@@ -111,29 +148,33 @@ int	main(int argc, char *argv[])
 		free_list(data.even_list);
 		pthread_mutex_destroy(&(data.mutex_even));
 		pthread_mutex_destroy(&(data.mutex_odd));
+		pthread_mutex_destroy(&(data.mutex_start));
 		return (EXIT_FAILURE);
 	}
 
 	//	Init threads
-	int i = 0;
-
-	for (;i < data.config.thread_num; i++)
+	data.start = false;
+	data.created_threads = 0;
+	for (int i = 0;i < data.config.thread_num; i++)
 	{
 		if (pthread_create(&(data.threads[i]), NULL, thread_routine, &data))
 		{
 			fprintf(stderr, "Error: pthread: thread creation failed\n");
 			break ;
 		}
+		data.created_threads++;
 	}
+	// Set start flag to true
+	set_bool(&(data.mutex_start), &(data.start), true);
 
 	// Join threads
-	for (int j = 0; j < i; j++)
+	for (int j = 0; j < data.created_threads; j++)
 	{
 		pthread_join(data.threads[j], NULL);
 	}
 
 	// Print lists
-	if (i == data.config.thread_num)
+	if (data.created_threads == data.config.thread_num)
 	{
 		printf("Even number list:\n");
 		print_list(data.even_list);
@@ -148,12 +189,10 @@ int	main(int argc, char *argv[])
 		free_list(data.odd_list);
 	free(data.threads);
 
-	//Destroy mutexes
+	//	Destroy mutexes
 	pthread_mutex_destroy(&data.mutex_even);
 	pthread_mutex_destroy(&data.mutex_odd);
+	pthread_mutex_destroy(&(data.mutex_start));
 
 	return(EXIT_SUCCESS);
 }
-
-// TO DO: add another mutex to start all threads synchronized.
-

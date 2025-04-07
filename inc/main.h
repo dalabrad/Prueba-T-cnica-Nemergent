@@ -16,13 +16,15 @@ typedef pthread_mutex_t mutex_t;
 
 typedef struct data_s
 {
-	mutex_t		mutex_even;
-	mutex_t		mutex_odd;
-	list_t		*even_list;
-	list_t		*odd_list;
-	pthread_t	*threads;
-	config_t	config;
-
+	mutex_t				mutex_even;
+	mutex_t				mutex_odd;
+	mutex_t				mutex_start;
+	bool				start;
+	list_t				*even_list;
+	list_t				*odd_list;
+	pthread_t			*threads;
+	config_t			config;
+	int					created_threads;
 } data_t;
 
 #endif
